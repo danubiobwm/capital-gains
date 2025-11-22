@@ -1,5 +1,8 @@
 package main
 
+import "github.com/danubiobwm/capital-gains/internal/domain/infrastructure/cli"
+
 func main() {
-	// This is a placeholder for the capital gains command-line tool.
+	handler := cli.NewCLIHandler()
+	handler.Handle()
 }
