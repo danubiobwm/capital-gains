@@ -1,37 +1,33 @@
-.PHONY: build test run clean docker-build docker-run
+APP=capital-gains
+BINARY=./$(APP)
+PKG=./...
 
-# Go parameters
-GOCMD=go
-GOBUILD=$(GOCMD) build
-GOTEST=$(GOCMD) test
-GOCLEAN=$(GOCMD) clean
-GOGET=$(GOCMD) get
-BINARY_NAME=capital-gains
-BINARY_UNIX=$(BINARY_NAME)_unix
+.PHONY: all build test fmt vet clean run e2e docker-build
 
-all: test build
+all: build
 
 build:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./cmd/capital-gains
+	go build -o $(APP) ./cmd/capital-gains
+
+run: build
+	# Run with example input
+	./$(APP) < test/examples_input.txt
 
 test:
-	$(GOTEST) -v ./...
+	go test ./...
+
+fmt:
+	go fmt ./...
+
+vet:
+	go vet ./...
 
 clean:
-	$(GOCLEAN)
-	rm -f $(BINARY_NAME)
-	rm -f $(BINARY_UNIX)
+	rm -f $(APP)
 
-run:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./cmd/capital-gains
-	./$(BINARY_NAME)
+e2e: build
+	@echo "Running end-to-end tests..."
+	@bash test/e2e_test.sh test/examples_input.txt test/expected_output.txt
 
 docker-build:
-	docker build -t capital-gains .
-
-docker-run:
-	docker run -i capital-gains
-
-# Cross compilation
-build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_UNIX) -v ./cmd/capital-gains
+	docker build -t capital-gains:latest .

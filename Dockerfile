@@ -1,15 +1,10 @@
-FROM golang:1.25-alpine AS builder
-
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-
+FROM golang:1.20 AS builder
+WORKDIR /src
 COPY . .
-RUN go build -o capital-gains ./cmd/capital-gains
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/capital-gains ./cmd/capital-gains
 
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-COPY --from=builder /app/capital-gains .
-
-ENTRYPOINT ["./capital-gains"]
+FROM alpine:3.18
+RUN apk add --no-cache ca-certificates
+COPY --from=builder /out/capital-gains /usr/local/bin/capital-gains
+USER nobody
+ENTRYPOINT ["/usr/local/bin/capital-gains"]
